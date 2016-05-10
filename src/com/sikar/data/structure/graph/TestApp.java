@@ -4,7 +4,7 @@ public class TestApp {
 
 	public static void  main(String args[]){
 		
-		Graph facebook = new Graph();
+		Facebook facebook = new Facebook();
 		
 		facebook.addUser("Rohit");
 		facebook.addUser("Alok");

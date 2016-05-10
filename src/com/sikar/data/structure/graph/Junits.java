@@ -4,6 +4,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
@@ -11,7 +12,7 @@ import org.junit.Test;
 
 public class Junits {
 
-	Graph facebook = new Graph();
+	Facebook facebook = new Facebook();
 	
 	@Test
 	public void testDuplicateUsers(){
@@ -162,5 +163,51 @@ public class Junits {
 			
 			System.out.println(vertex.getId() +"-->"+facebook.getConnections(vertex));
 		}
+	}
+	
+	@Test
+	public void testMutualFriends(){
+		
+		//Add users
+		facebook.addUser("Rohit");
+		facebook.addUser("Alok");
+		facebook.addUser("Sarath");
+		facebook.addUser("Vikrant");
+		facebook.addUser("Harish");
+		facebook.addUser("Aditya");
+		facebook.addUser("Manmohan");
+		facebook.addUser("Aish");
+		
+		//Rohit : Make Connections
+		facebook.makeFriends("Rohit", "Aditya", 50);
+		facebook.makeFriends("Rohit", "Sarath", 200);
+		facebook.makeFriends("Rohit", "Vikrant", 60);
+		facebook.makeFriends("Rohit", "Harish", 30);
+		facebook.makeFriends("Rohit", "Aish", 250);
+		
+		//Alok : Make Connections
+		facebook.makeFriends("Alok", "Manmohan", 100);
+		facebook.makeFriends("Alok", "Aditya", 100);
+		facebook.makeFriends("Alok", "Sarath", 100);
+		facebook.makeFriends("Alok", "Vikrant", 100);
+		
+		//Get Mutual Friends
+		List<Vertex> mutualFriends = facebook.getMutualFriends("Rohit", "Alok");
+		assertEquals(3, mutualFriends.size());
+		
+		List<Vertex> expectedMutualFriends = new ArrayList<>();
+		expectedMutualFriends.add(facebook.getUser("Aditya"));
+		expectedMutualFriends.add(facebook.getUser("Sarath"));
+		expectedMutualFriends.add(facebook.getUser("Vikrant"));
+		
+		assertEquals(expectedMutualFriends, mutualFriends);
+		
+		//Connect Rohit & Alok
+		facebook.makeFriends("Rohit", "Alok", 100);
+		
+		mutualFriends = facebook.getMutualFriends("Rohit", "Alok");
+		assertEquals(3, mutualFriends.size());
+		assertEquals(expectedMutualFriends, mutualFriends);
+		System.out.println("Mutual Friends of Rohit & Alok are : "+mutualFriends);
 	}
 }

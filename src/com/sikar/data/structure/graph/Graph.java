@@ -7,7 +7,7 @@ import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Set;
 
-public class Graph {
+public abstract class Graph {
 
 	List<Vertex> graph ;
 	
@@ -16,39 +16,39 @@ public class Graph {
 		graph = new ArrayList<Vertex>();
 	}
 	
-	public boolean addUser(String mUserName){
+	public boolean addVertex(String aVertexName){
 		
 		//check if Vertex already exist
 		for(Vertex vertex:graph){
 			
-			if(vertex.getId().equals(mUserName)){
-				System.out.println("User already exist");
+			if(vertex.getId().equals(aVertexName)){
+				System.out.println("Vertex already exist");
 				return false;
 			}
 		}
 		
-		return graph.add(new Vertex(mUserName));
+		return graph.add(new Vertex(aVertexName));
 	}
 	
-	public int indexOf(String aId){
+	public int indexOf(String aVertexName){
 		
 		for(int index=0;index < graph.size();index++){
 			
 			Vertex vertex = graph.get(index);
 			
-			if(vertex.getId().equals(aId)){
+			if(vertex.getId().equals(aVertexName)){
 				return index;
 			}
 		}
-		throw new NoSuchElementException("User "+aId+" doesn't exist. Add the user first.");
+		throw new NoSuchElementException("Vertex "+aVertexName+" doesn't exist. Add the Vertex first.");
 	}
 	
-	public void makeFriends(String aSourceName,String aDestinationName,int aWeight){
+	public void makeFriends(String aSourceVertex,String aDestinationVertex,int aWeight){
 		
 		//1. Check if users are present in the set or not.
-		int sourceIndex = indexOf(aSourceName);
+		int sourceIndex = indexOf(aSourceVertex);
 		
-		int destinationIndex = indexOf(aDestinationName);
+		int destinationIndex = indexOf(aDestinationVertex);
 			
 		//Add this edge to the source and destination vertices
 		Vertex source = graph.get(sourceIndex);
@@ -68,36 +68,6 @@ public class Graph {
 		}
 	}
 	
-	/**
-	 * Suggest first level friends of friends
-	 * 
-	 * @param aSource
-	 */
-	public Set<Vertex> suggestFriends(String aSource){
-		
-		int sourceIndex = indexOf(aSource);
-		
-		Vertex sourceVertex = graph.get(sourceIndex);
-		
-		List<Edge> edgeList = sourceVertex.getEdges();
-		
-		Set<Vertex> connections = new HashSet<>(edgeList.size());
-		
-		for(Edge edge:edgeList){
-			
-			int directFriendIndex = edge.getIndex();
-			
-			Vertex friendVertex = graph.get(directFriendIndex);
-			if(friendVertex.isActive()){
-				connections.addAll(getConnections(friendVertex));
-			}
-		}
-		connections.remove(sourceVertex);
-
-		connections.removeAll(getConnections(sourceVertex));
-		return connections;
-	}
-	
 	public List<Vertex> getConnections(String aId){
 		
 		int sourceIndex = indexOf(aId);
@@ -106,6 +76,57 @@ public class Graph {
 		
 		return getConnections(sourceVertex);
 	}
+	
+	/**
+	 * Return list of 2nd level connections
+	 * @param aVertexId
+	 * @return
+	 */
+	//TODO make it generic by passing the level id 
+	public Set<Vertex> getSecondLevelNeighbours(String aVertexId){
+		
+		int sourceIndex = indexOf(aVertexId);
+		
+		Vertex user = graph.get(sourceIndex);
+		
+		List<Edge> edgeList = user.getEdges();
+		
+		Set<Vertex> connections = new HashSet<>(edgeList.size());
+		
+		for(Edge edge:edgeList){
+			
+			int directFriendIndex = edge.getIndex();
+			
+			Vertex friend = graph.get(directFriendIndex);
+			if(friend.isActive()){
+				connections.addAll(getConnections(friend));
+			}
+		}
+		connections.remove(user);
+
+		connections.removeAll(getConnections(user));
+		return connections;
+	}
+	
+//	public void getNeighbours(String aVertexId,int aLevel,Set<Vertex> aConnections){
+//		
+//		if(aLevel == 1){
+//			
+//			List<Vertex> firstLevelConnections =getConnections(aVertexId); 
+//			aConnections.addAll(firstLevelConnections);
+//		}
+//		
+//		else if (aLevel == 2){
+//			getNeighbours(aVertexId,aLevel-1,aConnections);
+//			
+//			Iterator<Vertex> iterator = aConnections.iterator();
+//			
+//			while(iterator.hasNext()){
+//				
+//				getNeighbours(iterator.next().getId(), aLevel, aConnections);
+//			}
+//		}
+//	}
 	/**
 	 * Return list of friends
 	 * @param aVertex
@@ -128,13 +149,8 @@ public class Graph {
 		return null;
 	}
 
-	/**
-	 * Finds mutual friends between two users
-	 * @param aUser1 useroneId
-	 * @param aUser2 usertwoId
-	 * @return list of mutual friends
-	 */
-	public List<Vertex> getMutualFriends(String aUser1,String aUser2){
+	
+	public List<Vertex> getCommonVertices(String aUser1,String aUser2){
 		
 		//1. Check if users are present in the set or not.
 		int user1Index = indexOf(aUser1);
