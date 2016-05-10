@@ -2,136 +2,10 @@ package com.sikar.data.structure.graph;
 
 
 import java.util.ArrayList;
-import java.util.LinkedList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.NoSuchElementException;
-
-class Edge{
-	
-	private int mIndex;
-	private int mWeight;
-	
-	public Edge(int aIndex, int aWeight){
-		
-		this.mIndex = aIndex;
-		this.mWeight = aWeight;
-	}
-
-	public int getIndex() {
-		return mIndex;
-	}
-	public void setIndex(int aIndex) {
-		this.mIndex = aIndex;
-	}
-	public int getWeight() {
-		return mWeight;
-	}
-	public void setWeight(int aWeight) {
-		this.mWeight = aWeight;
-	}
-	
-	@Override
-	public int hashCode(){
-		
-		int result = 1;
-		result =  31 * result + mIndex;
-		result =  31 * result + mWeight;
-		return result;
-	}
-	
-	@Override
-	public boolean equals(Object aEdge){
-		
-		if(this == aEdge){
-			return true;
-		}
-		else if(aEdge == null || getClass() != aEdge.getClass()){
-			return false;
-		}
-		Edge edge = (Edge)aEdge;
-		
-		if(this.mIndex == edge.mIndex && this.mWeight == edge.mWeight){
-			return true;
-		}
-		return false;
-	}
-	
-	@Override
-	public String toString(){
-		
-		return "--"+mWeight+"-->"+mIndex;
-	}
-}
-
-class Vertex{
-	
-	private String mId;
-	
-	private List<Edge> mEdges;
-	
-	public Vertex(String aId){
-		
-		this.mEdges = new LinkedList<Edge>();
-		this.mId = aId;
-	}
-
-	public String getId() {
-		return mId;
-	}
-
-	public void setId(String aId) {
-		this.mId = aId;
-	}
-
-	public List<Edge> getEdges() {
-		return mEdges;
-	}
-
-	public void setEdges(List<Edge> aEdges) {
-		this.mEdges = aEdges;
-	}
-	
-	public boolean addEdge(int aDestinationVertexIndex, int aWeight){
-		
-		Edge edge = new Edge(aDestinationVertexIndex,aWeight);
-		return mEdges.add(edge);
-	}
-	
-	public void removeEdge(int aDestinationVertexIndex){
-		
-		for(Edge edge: mEdges){
-			
-			
-		}
-	}
-	
-	@Override
-	public int hashCode(){
-		
-		int result = 1;
-		return  31 * result + mId.hashCode();
-	}
-	
-	@Override
-	public boolean equals(Object aVertex){
-		
-		if(this == aVertex){
-			return true;
-		}
-		else if (aVertex == null || getClass() != aVertex.getClass()){
-			return false;
-		}
-		
-		Vertex vertex = (Vertex)aVertex;
-		
-		return mId.equals(vertex.mId);
-	}
-	
-	@Override
-	public String toString(){
-		return mId+" : "+mEdges;
-	}
-}
+import java.util.Set;
 
 public class Graph {
 
@@ -166,7 +40,7 @@ public class Graph {
 				return index;
 			}
 		}
-		return -1;
+		throw new NoSuchElementException("User "+aId+" doesn't exist. Add the user first.");
 	}
 	
 	public void makeFriends(String aSourceName,String aDestinationName,int aWeight){
@@ -174,23 +48,24 @@ public class Graph {
 		//1. Check if users are present in the set or not.
 		int sourceIndex = indexOf(aSourceName);
 		
-		if(sourceIndex == -1){
-			throw new NoSuchElementException("User "+aSourceName+" doesn't exist. Add the user first.");
-		}
-		
 		int destinationIndex = indexOf(aDestinationName);
-		if(destinationIndex == -1){
-			throw new NoSuchElementException("User "+aDestinationName+" doesn't exist. Add the user first.");
-		}
-		
 			
 		//Add this edge to the source and destination vertices
 		Vertex source = graph.get(sourceIndex);
-		Vertex destination = graph.get(destinationIndex);
 		
-		source.addEdge(destinationIndex, aWeight);
+		//Check if connection already exists
+		boolean isConnected = source.isConnected(destinationIndex);
 		
-		destination.addEdge(sourceIndex, aWeight);
+		if(isConnected){
+			System.out.println("Already Connected !");
+		}
+		else{
+			Vertex destination = graph.get(destinationIndex);
+			
+			source.addEdge(destinationIndex, aWeight);
+			
+			destination.addEdge(sourceIndex, aWeight);
+		}
 	}
 	
 	/**
@@ -198,53 +73,126 @@ public class Graph {
 	 * 
 	 * @param aSource
 	 */
-	public List<Vertex> suggestFriends(String aSource){
+	public Set<Vertex> suggestFriends(String aSource){
 		
 		int sourceIndex = indexOf(aSource);
-		
-		if(sourceIndex == -1){
-			throw new NoSuchElementException("User "+aSource+" doesn't exist. Add the user first.");
-		}
 		
 		Vertex sourceVertex = graph.get(sourceIndex);
 		
 		List<Edge> edgeList = sourceVertex.getEdges();
 		
-		List<Vertex> connections = new ArrayList<>(edgeList.size());
+		Set<Vertex> connections = new HashSet<>(edgeList.size());
 		
 		for(Edge edge:edgeList){
 			
 			int directFriendIndex = edge.getIndex();
 			
 			Vertex friendVertex = graph.get(directFriendIndex);
-			
-			connections.addAll(getConnections(friendVertex));
+			if(friendVertex.isActive()){
+				connections.addAll(getConnections(friendVertex));
+			}
 		}
+		connections.remove(sourceVertex);
+
+		connections.removeAll(getConnections(sourceVertex));
 		return connections;
 	}
 	
+	public List<Vertex> getConnections(String aId){
+		
+		int sourceIndex = indexOf(aId);
+		
+		Vertex sourceVertex = graph.get(sourceIndex);
+		
+		return getConnections(sourceVertex);
+	}
 	/**
 	 * Return list of friends
 	 * @param aVertex
 	 * @return
 	 */
-	private List<Vertex> getConnections(Vertex aVertex) {
+	public List<Vertex> getConnections(Vertex aVertex) {
 		
-		List<Edge> edgeList = aVertex.getEdges();
-		
-		List<Vertex> friends = new ArrayList<>(edgeList.size());
-		
-		for(Edge edge: edgeList){
+		if(aVertex.isActive()){
+			List<Edge> edgeList = aVertex.getEdges();
 			
-			friends.add(graph.get(edge.getIndex()));
+			List<Vertex> friends = new ArrayList<>(edgeList.size());
+			
+			for(Edge edge: edgeList){
+				
+				friends.add(graph.get(edge.getIndex()));
+			}
+			return friends;
 		}
-		return friends;
+		System.out.println(aVertex.getId() +" is inactive");
+		return null;
 	}
 
-	public void removeUser(String aId){
+	//TODO
+	public Set<Vertex> getMutualFriends(String aUser1,String aUser2){
 		
-		//Remove user should also remove all the connections
+		//1. Check if users are present in the set or not.
+		int sourceIndex = indexOf(aUser1);
+		
+		int destinationIndex = indexOf(aUser2);
+			
+		Vertex source = graph.get(sourceIndex);
+		
+		return null;
+				
+	}
+	public void removeUser(String aId){
+
+		int index = indexOf(aId);
+		
+		Vertex source = graph.get(index);
+		source.setActive(false);
+		//1. Remove Connections for this User
+		for(Vertex vertex: graph){
+			
+			if(vertex.isActive()){
+				vertex.removeEdge(index);
+			}
+		}
+	}
+
+	public int getNumberOfUsers() {
+
+		return graph.size();
+	}
+
+	public boolean areFriends(String aSourceName, String aDestinationName) {
+		//1. Check if users are present in the set or not.
+		int sourceIndex = indexOf(aSourceName);
+		
+		int destinationIndex = indexOf(aDestinationName);
+			
+		//Add this edge to the source and destination vertices
+		Vertex source = graph.get(sourceIndex);
+		
+		//Check if connection already exists
+		return source.isConnected(destinationIndex);
 		
 	}
 	
+	public boolean unFriend(String aSourceName, String aDestinationName){
+		
+		//1. Check if users are present in the set or not.
+		int sourceIndex = indexOf(aSourceName);
+		
+		int destinationIndex = indexOf(aDestinationName);
+			
+		//Add this edge to the source and destination vertices
+		Vertex source = graph.get(sourceIndex);
+		
+		return source.removeEdge(destinationIndex);
+	}
+
+	public Vertex getUser(String aSourceName) {
+
+		//1. Check if users are present in the set or not.
+		int sourceIndex = indexOf(aSourceName);
+				
+		return graph.get(sourceIndex);
+	}
 }
