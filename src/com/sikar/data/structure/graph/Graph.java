@@ -128,19 +128,42 @@ public class Graph {
 		return null;
 	}
 
-	//TODO
-	public Set<Vertex> getMutualFriends(String aUser1,String aUser2){
+	/**
+	 * Finds mutual friends between two users
+	 * @param aUser1 useroneId
+	 * @param aUser2 usertwoId
+	 * @return list of mutual friends
+	 */
+	public List<Vertex> getMutualFriends(String aUser1,String aUser2){
 		
 		//1. Check if users are present in the set or not.
-		int sourceIndex = indexOf(aUser1);
+		int user1Index = indexOf(aUser1);
 		
-		int destinationIndex = indexOf(aUser2);
+		int user2Index = indexOf(aUser2);
 			
-		Vertex source = graph.get(sourceIndex);
+		Vertex user1 = graph.get(user1Index);
 		
-		return null;
+		Vertex user2 = graph.get(user2Index);
+		
+		//Get friends of user1
+		List<Vertex> user1FriendList = getConnections(user1);
+		
+		//Get friends of user2
+		List<Vertex> user2FriendList = getConnections(user2);
+		
+		//If User1 and User2 are friends then 
+		if(user1.isConnected(user2Index)){
+			
+			user1FriendList.remove(user2);//remove user 2 from user1's friend list
+			user2FriendList.remove(user1);//remove user 1 from user2's friend list
+		}
+		//find common friends from two lists
+		user1FriendList.retainAll(user2FriendList);
+		
+		return user1FriendList;
 				
 	}
+
 	public void removeUser(String aId){
 
 		int index = indexOf(aId);
@@ -166,8 +189,8 @@ public class Graph {
 		int sourceIndex = indexOf(aSourceName);
 		
 		int destinationIndex = indexOf(aDestinationName);
-			
-		//Add this edge to the source and destination vertices
+		
+		//Get vertex
 		Vertex source = graph.get(sourceIndex);
 		
 		//Check if connection already exists
